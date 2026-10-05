@@ -1,90 +1,73 @@
-# SendMoney — Application
+# SendMoney — Service de paiement
 
-Projet React (Vite + React Router) structuré pour devenir une vraie
-application de transfert d'argent international.
+Backend Node/Express qui orchestre les paiements derrière une interface
+commune à plusieurs fournisseurs (Stripe, Flutterwave), pensé pour être
+robuste et sécurisé par défaut.
+
+## ⚠️ Avant de lancer de vrais paiements — prérequis non techniques
+
+Une plateforme de transfert d'argent international est une activité
+**réglementée**. Avant tout transfert réel d'argent, il te faut (selon les
+pays visés) :
+- Une licence de money transmitter / agrément auprès du régulateur financier
+  local, ou un partenariat avec un acteur déjà agréé.
+- Un programme KYC (vérification d'identité des utilisateurs) et AML
+  (lutte anti-blanchiment) — souvent une obligation légale, pas une option.
+- Les vrais comptes marchands Stripe et Flutterwave, créés et validés par
+  toi (identité de l'entreprise, documents justificatifs).
+
+Rien de tout cela ne peut être automatisé depuis ce service — c'est une
+démarche administrative/légale de ton côté.
+
+## Ce que ce service fait
+
+- **Abstraction fournisseur** (`src/providers/`) : Stripe pour carte/international,
+  Flutterwave pour mobile money. Ajouter un fournisseur = implémenter
+  `PaymentProvider.js`, sans toucher au reste.
+- **Idempotence** : chaque paiement est associé à une clé unique — impossible
+  de débiter deux fois un utilisateur à cause d'un retry réseau.
+- **Vérification de signature obligatoire sur chaque webhook** — sans elle,
+  n'importe qui pourrait simuler un paiement réussi.
+- **Aucune donnée de carte ne transite par ce backend** (tokenisation Stripe.js
+  côté navigateur) — réduit fortement le périmètre de conformité PCI-DSS.
+- **Rate limiting**, **Helmet** (en-têtes de sécurité), **CORS restreint**,
+  **limite de taille de requête**, **logs qui redacted les champs sensibles**,
+  **gestion d'erreurs qui ne fuite jamais de détails internes**.
+- **Garde-fous métier** : plafond de montant, validation stricte des entrées.
 
 ## Démarrage
 
 ```bash
 npm install
+cp .env.example .env   # puis remplis tes vraies clés de test Stripe/Flutterwave
 npm run dev
 ```
 
-Puis ouvre http://localhost:5173
-
-Compte démo : n'importe quel email/mot de passe sur `/connexion`.
-Utilise un email contenant **"admin"** (ex. `admin@test.com`) pour accéder
-à la console admin via `/admin`.
-
-## Structure
-
-```
-src/
-  api/mockApi.js          # Couche API — à remplacer par de vrais appels backend
-  context/AuthContext.jsx # Authentification globale (contexte React)
-  components/
-    ProtectedRoute.jsx    # Garde de routes (connecté / admin)
-    layout/
-      PublicLayout.jsx    # Navbar + footer du site public
-      AppLayout.jsx       # Sidebar espace utilisateur
-      AdminLayout.jsx     # Sidebar console admin
-  pages/
-    public/Home.jsx
-    auth/Login.jsx, Register.jsx
-    app/Dashboard.jsx, SendMoney.jsx, Beneficiaries.jsx, Transactions.jsx, Profile.jsx
-    admin/AdminDashboard.jsx, AdminUsers.jsx, AdminCountries.jsx, AdminRates.jsx, AdminTransactions.jsx
-  styles/global.css
-  App.jsx                 # Toutes les routes de l'application
-  main.jsx                # Point d'entrée
+Teste les webhooks en local avec la Stripe CLI :
+```bash
+stripe listen --forward-to localhost:4000/api/webhooks/stripe
 ```
 
-## Routes principales
+## Ce qui reste à faire pour la production
 
-| Route | Accès |
-|---|---|
-| `/` | Public |
-| `/connexion`, `/inscription` | Public |
-| `/app/tableau-de-bord` | Connecté |
-| `/app/envoyer` | Connecté — assistant de transfert en 4 étapes |
-| `/app/beneficiaires` | Connecté |
-| `/app/transactions` | Connecté |
-| `/app/profil` | Connecté |
-| `/admin` | Admin uniquement |
-| `/admin/utilisateurs`, `/admin/pays-devises`, `/admin/taux-de-change`, `/admin/transactions` | Admin uniquement |
+1. **Authentification réelle** dans `src/middleware/requireAuth.js` (JWT ou
+   session signée) — actuellement un placeholder de démo.
+2. **Vraie base de données** dans `src/db/paymentRepository.js` (schéma SQL
+   fourni en commentaire) — actuellement en mémoire, perdu au redémarrage.
+3. **Stockage des clés en secret manager** (AWS Secrets Manager, Vercel
+   Environment Variables chiffrées...) plutôt qu'un simple `.env` en prod.
+4. **Tests automatisés** des cas d'échec (carte refusée, timeout fournisseur,
+   webhook rejoué) avant tout trafic réel.
+5. **Monitoring/alerting** sur les échecs de paiement et les pics de
+   webhooks rejetés (signe possible de tentative de fraude).
+6. Brancher ce service au frontend `sendmoney-app` : la page `SendMoney.jsx`
+   doit appeler `POST /api/payments` à l'étape de confirmation, puis utiliser
+   `clientSecret` (Stripe.js) ou `redirectUrl` (Flutterwave) pour finaliser.
 
-## Brancher un vrai backend
+## Pourquoi deux fournisseurs et pas un seul "universel" ?
 
-Tout passe par `src/api/mockApi.js` : chaque fonction (`login`, `createTransfer`,
-`listBeneficiaries`, etc.) garde la même signature mais doit faire un vrai
-appel réseau (`fetch`) vers ton API. Aucun composant n'a besoin de changer
-tant que la signature des fonctions reste identique.
-
-Priorités suggérées pour un vrai lancement :
-1. Authentification réelle (JWT ou session) + hash des mots de passe.
-2. Vrai fournisseur de taux de change (API bancaire/Wise/Xe...).
-3. Stockage persistant (PostgreSQL/MongoDB) pour utilisateurs, bénéficiaires,
-   transactions.
-4. Conformité réglementaire (KYC, AML) avant tout transfert réel d'argent —
-   obligatoire légalement pour ce type de plateforme.
-5. Paiement/règlement réel avec un partenaire agréé (Wise, Stripe Treasury,
-   partenaire local de mobile money, etc.).
-
-## Pages pas encore construites
-
-- Mot de passe oublié (page dédiée)
-- Tarifs, FAQ, À propos, Contact (contenu statique, faciles à ajouter)
-- Vue mobile dédiée (le responsive CSS couvre une bonne partie, mais pas
-  d'app mobile native)
-- Rapports et support côté admin
-
-## Prochaine étape : GitHub & déploiement
-
-Ce projet ne peut pas être poussé automatiquement sur ton GitHub depuis
-cette conversation (aucun connecteur GitHub disponible ici). Pour continuer :
-
-1. Initialise un repo : `git init && git add . && git commit -m "feat: scaffold SendMoney"`.
-2. Pousse-le sur GitHub, puis relie-le à un nouveau projet Vercel (ou à
-   `smarthr-roster` si tu veux le remplacer — à confirmer, ce sont deux
-   projets différents).
-3. Ou utilise **Claude Code** en local, qui a un accès réel en lecture/écriture
-   à ton repo, pour poursuivre le développement et pousser directement.
+Les plateformes comme Wise ou PayPal ne couvrent pas bien le mobile money
+ouest-africain ; les agrégateurs locaux (Flutterwave, CinetPay) ne couvrent
+pas bien les cartes internationales. Le pattern adaptateur ici permet
+d'ajouter ou retirer un fournisseur par pays/corridor sans réécrire la
+logique métier.
