@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { COUNTRIES } from "../../api/mockApi";
+import { COUNTRIES, POPULAR_COUNTRIES } from "../../api/mockApi";
 
 export default function Home() {
   return (
@@ -18,11 +18,12 @@ export default function Home() {
       </section>
 
       <section className="country-list">
-        <h2>Plus de {COUNTRIES.length * 6} pays disponibles</h2>
+        <h2>{COUNTRIES.length} pays disponibles, à l'envoi comme à la réception</h2>
         <div className="country-chips">
-          {COUNTRIES.map((c) => (
+          {POPULAR_COUNTRIES.map((c) => (
             <span key={c.code} className="chip">{c.flag} {c.name}</span>
           ))}
+          <Link to="/inscription" className="chip chip-link">+ {COUNTRIES.length - POPULAR_COUNTRIES.length} autres →</Link>
         </div>
       </section>
     </div>

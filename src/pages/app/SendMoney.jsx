@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { COUNTRIES, getExchangeRate, createTransfer } from "../../api/mockApi";
+import CountryPicker from "../../components/ui/CountryPicker";
 
 const STEP_LABELS = ["Pays d'envoi", "Pays de réception", "Bénéficiaire", "Récapitulatif"];
 
@@ -51,13 +52,7 @@ export default function SendMoney() {
         {step === 1 && (
           <>
             <h2>Pays d'envoi</h2>
-            <div className="country-grid">
-              {COUNTRIES.map((c) => (
-                <div key={c.code} className={`country ${from?.code === c.code ? "selected" : ""}`} onClick={() => setFrom(c)}>
-                  <span className="flag">{c.flag}</span>{c.name}
-                </div>
-              ))}
-            </div>
+            <CountryPicker countries={COUNTRIES} selected={from} onSelect={setFrom} />
             <div className="wizard-actions"><span /><button className="btn btn-primary" onClick={() => setStep(2)}>Suivant →</button></div>
           </>
         )}
@@ -65,13 +60,7 @@ export default function SendMoney() {
         {step === 2 && (
           <>
             <h2>Pays de réception</h2>
-            <div className="country-grid">
-              {COUNTRIES.filter((c) => c.code !== from?.code).map((c) => (
-                <div key={c.code} className={`country ${to?.code === c.code ? "selected" : ""}`} onClick={() => setTo(c)}>
-                  <span className="flag">{c.flag}</span>{c.name}
-                </div>
-              ))}
-            </div>
+            <CountryPicker countries={COUNTRIES} selected={to} onSelect={setTo} excludeCode={from?.code} />
             <div className="wizard-actions">
               <button className="btn btn-secondary" onClick={() => setStep(1)}>← Retour</button>
               <button className="btn btn-primary" disabled={!to} onClick={() => setStep(3)}>Suivant →</button>

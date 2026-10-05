@@ -9,16 +9,8 @@
 
 const delay = (ms = 300) => new Promise((r) => setTimeout(r, ms));
 
-export const COUNTRIES = [
-  { code: "CI", name: "Côte d'Ivoire", flag: "🇨🇮", currency: "XOF" },
-  { code: "FR", name: "France", flag: "🇫🇷", currency: "EUR" },
-  { code: "US", name: "États-Unis", flag: "🇺🇸", currency: "USD" },
-  { code: "NG", name: "Nigeria", flag: "🇳🇬", currency: "NGN" },
-  { code: "GA", name: "Gabon", flag: "🇬🇦", currency: "XAF" },
-  { code: "CM", name: "Cameroun", flag: "🇨🇲", currency: "XAF" },
-  { code: "SN", name: "Sénégal", flag: "🇸🇳", currency: "XOF" },
-  { code: "CD", name: "RDC", flag: "🇨🇩", currency: "CDF" },
-];
+// Liste complète des pays du monde (envoi ET réception) — voir countries.js.
+export { COUNTRIES, POPULAR_COUNTRIES } from "./countries.js";
 
 let beneficiaries = [
   { id: "b1", name: "Jean Dupont", country: "CM", phone: "+237 6 12 34 56 78", mode: "Mobile Money" },
