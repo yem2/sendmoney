@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SendMoney — Prototype</title>
+<style>
+:root{
+  --blue:#2563eb; --blue-dark:#1d4ed8; --ink:#0f172a; --muted:#64748b;
+  --line:#e2e8f0; --surface:#fff; --canvas:#f8fafc;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--canvas);color:var(--ink);height:100%}
+.topnav{display:flex;align-items:center;gap:24px;padding:14px 24px;background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
+.logo{font-weight:800;font-size:18px;color:var(--blue)}
+.tabs{display:flex;gap:4px;margin-left:auto;overflow-x:auto}
+.tabs button{border:none;background:none;padding:8px 14px;border-radius:8px;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+.tabs button.active{background:var(--blue);color:#fff}
+.view{display:none;max-width:1000px;margin:0 auto;padding:32px 20px}
+.view.active{display:block}
+/* Landing */
+.hero{background:linear-gradient(135deg,var(--blue),var(--blue-dark));color:#fff;border-radius:16px;padding:48px 32px;text-align:center}
+.hero h1{font-size:30px;margin:0 0 10px}
+.hero p{opacity:.9;margin:0 0 20px}
+.btn{border:none;border-radius:8px;padding:11px 22px;font-weight:700;cursor:pointer;font-size:14px}
+.btn-white{background:#fff;color:var(--blue-dark)}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-secondary{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+/* Wizard */
+.steps{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+.step{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.step .dot{width:22px;height:22px;border-radius:50%;background:var(--line);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+.step.done .dot{background:var(--blue)}
+.step.current .dot{background:var(--blue-dark)}
+.step.current{color:var(--ink);font-weight:700}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:24px}
+.country-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;margin:16px 0}
+.country{border:1px solid var(--line);border-radius:10px;padding:12px;text-align:center;cursor:pointer;font-size:13px;font-weight:600}
+.country.selected{border-color:var(--blue);background:#eff6ff;color:var(--blue-dark)}
+.flag{font-size:22px;display:block;margin-bottom:6px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+.form-row label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:#334155}
+.form-row input,.form-row select{padding:10px 12px;border:1px solid var(--line);border-radius:8px;font:inherit}
+.wizard-actions{display:flex;justify-content:space-between;margin-top:24px}
+.recap-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.recap-row:last-child{border:none}
+/* Dashboard */
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:20px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
+.stat b{font-size:22px;display:block;color:var(--blue-dark)}
+.stat span{font-size:12px;color:var(--muted)}
+table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+th,td{text-align:left;padding:10px 14px;font-size:13px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);text-transform:uppercase;font-size:11px}
+.badge{background:#dcfce7;color:#166534;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700}
+h2{margin-top:0}
+.muted{color:var(--muted);font-size:14px}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <span class="logo">🌐 SendMoney</span>
+  <div class="tabs">
+    <button data-view="accueil" class="active">Accueil</button>
+    <button data-view="transfert">Envoyer de l'argent</button>
+    <button data-view="dashboard">Tableau de bord</button>
+  </div>
+</nav>
+
+<!-- ACCUEIL -->
+<section id="accueil" class="view active">
+  <div class="hero">
+    <h1>Une plateforme de transfert véritablement internationale</h1>
+    <p>Envoyez de l'argent partout dans le monde. Simplement. Rapidement. En toute sécurité.</p>
+    <button class="btn btn-white" onclick="go('transfert')">Envoyer de l'argent →</button>
+  </div>
+</section>
+
+<!-- TRANSFERT (wizard) -->
+<section id="transfert" class="view">
+  <div class="steps" id="stepsBar"></div>
+  <div class="card" id="wizardBody"></div>
+</section>
+
+<!-- DASHBOARD -->
+<section id="dashboard" class="view">
+  <h2>Bonjour Jean, voici un aperçu de votre activité</h2>
+  <div class="dash-grid">
+    <div class="stat"><b>0 XOF</b><span>Solde disponible</span></div>
+    <div class="stat"><b>5</b><span>Transferts envoyés</span></div>
+    <div class="stat"><b>2</b><span>Transferts reçus</span></div>
+    <div class="stat"><b>8</b><span>Bénéficiaires</span></div>
+  </div>
+  <h3>Dernières transactions</h3>
+  <table>
+    <thead><tr><th>Trajet</th><th>Envoyé</th><th>Reçu</th><th>Statut</th></tr></thead>
+    <tbody>
+      <tr><td>Côte d'Ivoire → Cameroun</td><td>100 000 XOF</td><td>64 740 XAF</td><td><span class="badge">Réussi</span></td></tr>
+      <tr><td>France → États-Unis</td><td>500 EUR</td><td>535,20 USD</td><td><span class="badge">Réussi</span></td></tr>
+      <tr><td>Nigeria → Sénégal</td><td>200 000 NGN</td><td>118 500 XOF</td><td><span class="badge">Réussi</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<script>
+const views=["accueil","transfert","dashboard"];
+function go(v){
+  views.forEach(x=>document.getElementById(x).classList.toggle("active",x===v));
+  document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("active",b.dataset.view===v));
+  if(v==="transfert") renderStep();
+}
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>go(b.dataset.view));
+
+// --- Wizard state ---
+const state={step:1,from:"Côte d'Ivoire",to:null,name:"",phone:"",mode:"Mobile Money",amount:100000};
+const stepLabels=["Pays d'envoi","Pays de réception","Bénéficiaire","Récapitulatif"];
+const countries=[["🇨🇮","Côte d'Ivoire"],["🇫🇷","France"],["🇺🇸","États-Unis"],["🇳🇬","Nigeria"],["🇬🇦","Gabon"],["🇨🇲","Cameroun"],["🇸🇳","Sénégal"],["🇨🇩","RDC"]];
+
+function renderSteps(){
+  document.getElementById("stepsBar").innerHTML = stepLabels.map((label,i)=>{
+    const n=i+1, cls = n<state.step?"done":n===state.step?"current":"";
+    return `<div class="step ${cls}"><span class="dot">${n}</span>${label}</div>`;
+  }).join("");
+}
+
+function countryGrid(selected,onPick){
+  return `<div class="country-grid">${countries.map(([flag,name])=>
+    `<div class="country ${name===selected?'selected':''}" onclick="${onPick}('${name}')">
+       <span class="flag">${flag}</span>${name}
+     </div>`).join("")}</div>`;
+}
+
+function renderStep(){
+  renderSteps();
+  const body=document.getElementById("wizardBody");
+  if(state.step===1){
+    body.innerHTML = `<h2>Pays d'envoi</h2><p class="muted">Depuis quel pays envoyez-vous l'argent ?</p>
+      ${countryGrid(state.from,"pickFrom")}
+      <div class="wizard-actions"><span></span><button class="btn btn-primary" onclick="next()">Suivant →</button></div>`;
+  } else if(state.step===2){
+    body.innerHTML = `<h2>Pays de réception</h2><p class="muted">Où votre bénéficiaire recevra-t-il l'argent ?</p>
+      ${countryGrid(state.to,"pickTo")}
+      <div class="wizard-actions"><button class="btn btn-secondary" onclick="prev()">← Retour</button><button class="btn btn-primary" onclick="next()">Suivant →</button></div>`;
+  } else if(state.step===3){
+    body.innerHTML = `<h2>Informations du bénéficiaire</h2>
+      <div class="form-row">
+        <label>Nom complet <input id="bName" value="${state.name}" placeholder="Ex. Jean Dupont"></label>
+        <label>Téléphone <input id="bPhone" value="${state.phone}" placeholder="+237 6 12 34 56 78"></label>
+        <label>Mode de réception
+          <select id="bMode">
+            <option ${state.mode==="Mobile Money"?"selected":""}>Mobile Money</option>
+            <option ${state.mode==="Compte bancaire"?"selected":""}>Compte bancaire</option>
+            <option ${state.mode==="Cash Pickup"?"selected":""}>Cash Pickup</option>
+          </select>
+        </label>
+        <label>Montant <input id="bAmount" type="number" value="${state.amount}"></label>
+      </div>
+      <div class="wizard-actions"><button class="btn btn-secondary" onclick="prev()">← Retour</button><button class="btn btn-primary" onclick="saveBeneficiary()">Suivant →</button></div>`;
+  } else {
+    const fee = Math.round(state.amount*0.015);
+    const received = Math.round((state.amount-fee)*0.6474);
+    body.innerHTML = `<h2>Récapitulatif de votre transfert</h2>
+      <div class="recap-row"><span>Pays d'envoi</span><b>${state.from}</b></div>
+      <div class="recap-row"><span>Pays de réception</span><b>${state.to||"—"}</b></div>
+      <div class="recap-row"><span>Bénéficiaire</span><b>${state.name||"—"} (${state.phone||"—"})</b></div>
+      <div class="recap-row"><span>Mode de réception</span><b>${state.mode}</b></div>
+      <div class="recap-row"><span>Montant envoyé</span><b>${state.amount.toLocaleString("fr-FR")} XOF</b></div>
+      <div class="recap-row"><span>Frais (1,5%)</span><b>${fee.toLocaleString("fr-FR")} XOF</b></div>
+      <div class="recap-row"><span>Montant reçu (estimé)</span><b>${received.toLocaleString("fr-FR")} XAF</b></div>
+      <div class="wizard-actions"><button class="btn btn-secondary" onclick="prev()">← Retour</button><button class="btn btn-primary" onclick="alert('Prototype — aucun transfert réel effectué.')">Confirmer le transfert</button></div>`;
+  }
+}
+function pickFrom(n){state.from=n;renderStep();}
+function pickTo(n){state.to=n;renderStep();}
+function saveBeneficiary(){
+  state.name=document.getElementById("bName").value;
+  state.phone=document.getElementById("bPhone").value;
+  state.mode=document.getElementById("bMode").value;
+  state.amount=Number(document.getElementById("bAmount").value)||0;
+  next();
+}
+function next(){ if(state.step<4) state.step++; renderStep(); }
+function prev(){ if(state.step>1) state.step--; renderStep(); }
+renderStep();
+</script>
+</body>
+</html>
