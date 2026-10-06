@@ -1,7 +1,15 @@
-# SendMoney — Application
+# SendMoney — API backend (Neon)
 
-Projet React (Vite + React Router) structuré pour devenir une vraie
-application de transfert d'argent international.
+Backend Express branché sur une vraie base **Neon Postgres**, déjà créée et
+peuplée (projet Neon `smarthr-int3d`, base `sendmoney`, 190 pays, schéma
+`users`/`beneficiaries`/`transactions`/`countries`).
+
+## ⚠️ Le fichier `.env` contient de vrais identifiants
+
+`.env` inclut déjà ta vraie chaîne de connexion Neon et un secret JWT généré
+aléatoirement — prêt à l'emploi, mais **ne le commite jamais sur GitHub**
+(`.gitignore` l'exclut déjà). Si tu l'as déjà exposé accidentellement,
+change le mot de passe du rôle `sendmoney_owner` dans la console Neon.
 
 ## Démarrage
 
@@ -10,101 +18,62 @@ npm install
 npm run dev
 ```
 
-## Déploiement sur Vercel
+L'API tourne sur `http://localhost:4001`.
 
-Ce projet est une SPA (Single Page Application) : toutes les routes
-(`/app/tableau-de-bord`, `/admin/utilisateurs`, etc.) sont gérées côté
-client par React Router, pas par de vrais fichiers sur le serveur. Sans
-configuration particulière, Vercel renvoie une 404 dès qu'on navigue
-directement vers une de ces routes (lien partagé, rafraîchissement de
-page) — c'est le fichier `vercel.json` à la racine qui corrige ça en
-redirigeant toutes les routes vers `index.html`.
+## Compte super administrateur
 
-Paramètres de build à vérifier dans Vercel (normalement auto-détectés) :
-- **Framework preset** : Vite
-- **Build command** : `npm run build`
-- **Output directory** : `dist`
+Le compte `Joresyemte12@gmail.com` existe déjà dans la base avec le rôle
+`super_admin` et un mot de passe temporaire. **Connecte-toi puis considère
+ce mot de passe comme à usage unique** (aucune route de changement de mot
+de passe n'est encore construite — à ajouter avant la prod).
 
-Si le problème persiste après avoir ajouté `vercel.json`, vérifie que
-le fichier est bien à la racine du projet déployé (pas dans `src/`), et
-redéploie (un simple nouveau build ne suffit pas toujours — un redeploy
-complet peut être nécessaire pour que Vercel relise `vercel.json`).
+## Endpoints
 
-Puis ouvre http://localhost:5173
+| Méthode | Route | Accès |
+|---|---|---|
+| POST | `/api/auth/login` | Public |
+| POST | `/api/auth/register` | Public |
+| GET | `/api/auth/me` | Connecté |
+| GET | `/api/countries` | Public |
+| PATCH | `/api/countries/:code/active` | Admin |
+| GET/POST | `/api/beneficiaries` | Connecté |
+| DELETE | `/api/beneficiaries/:id` | Connecté (le sien uniquement) |
+| GET | `/api/exchange-rate?from=XOF&to=XAF` | Connecté |
+| GET/POST | `/api/transactions` | Connecté |
+| GET | `/api/dashboard/stats` | Connecté |
+| GET | `/api/admin/users` | Admin |
+| PATCH | `/api/admin/users/:id/status` | Admin |
+| PATCH | `/api/admin/users/:id/role` | **Super admin uniquement** |
 
-Compte démo : n'importe quel email/mot de passe sur `/connexion`.
-Utilise un email contenant **"admin"** (ex. `admin@test.com`) pour accéder
-à la console admin via `/admin`.
+## Sécurité déjà en place
 
-## Structure
+- Mots de passe hashés en bcrypt (12 rounds), jamais stockés en clair.
+- JWT signé, vérifié sur chaque route protégée — le `role` dans le token
+  vient de la base, jamais du corps de la requête.
+- Changer le rôle d'un utilisateur (promouvoir admin) est réservé au
+  `super_admin` — un admin normal ne peut pas se promouvoir lui-même.
+- `user_id` toujours dérivé du token vérifié, jamais du corps de la requête
+  — empêche un utilisateur d'agir au nom d'un autre.
+- Rate limiting sur `/auth/login` (anti brute-force).
+- Toutes les requêtes SQL sont paramétrées (`$1, $2...`) — aucune
+  concaténation de chaîne, donc pas d'injection SQL possible par ce chemin.
 
-```
-src/
-  api/mockApi.js          # Couche API — à remplacer par de vrais appels backend
-  context/AuthContext.jsx # Authentification globale (contexte React)
-  components/
-    ProtectedRoute.jsx    # Garde de routes (connecté / admin)
-    layout/
-      PublicLayout.jsx    # Navbar + footer du site public
-      AppLayout.jsx       # Sidebar espace utilisateur
-      AdminLayout.jsx     # Sidebar console admin
-  pages/
-    public/Home.jsx
-    auth/Login.jsx, Register.jsx
-    app/Dashboard.jsx, SendMoney.jsx, Beneficiaries.jsx, Transactions.jsx, Profile.jsx
-    admin/AdminDashboard.jsx, AdminUsers.jsx, AdminCountries.jsx, AdminRates.jsx, AdminTransactions.jsx
-  styles/global.css
-  App.jsx                 # Toutes les routes de l'application
-  main.jsx                # Point d'entrée
-```
+## Brancher le frontend `sendmoney-app`
 
-## Routes principales
+Remplace `src/api/mockApi.js` du projet `sendmoney-app` par des appels
+`fetch` vers `http://localhost:4001/api/...` (mêmes noms de fonctions
+`login`, `register`, `listBeneficiaries`, etc. — voir le fichier
+`src/api/realApi.js` fourni séparément, à copier par-dessus `mockApi.js`).
 
-| Route | Accès |
-|---|---|
-| `/` | Public |
-| `/connexion`, `/inscription` | Public |
-| `/app/tableau-de-bord` | Connecté |
-| `/app/envoyer` | Connecté — assistant de transfert en 4 étapes |
-| `/app/beneficiaires` | Connecté |
-| `/app/transactions` | Connecté |
-| `/app/profil` | Connecté |
-| `/admin` | Admin uniquement |
-| `/admin/utilisateurs`, `/admin/pays-devises`, `/admin/taux-de-change`, `/admin/transactions` | Admin uniquement |
+## Prochaines étapes avant la production
 
-## Brancher un vrai backend
-
-Tout passe par `src/api/mockApi.js` : chaque fonction (`login`, `createTransfer`,
-`listBeneficiaries`, etc.) garde la même signature mais doit faire un vrai
-appel réseau (`fetch`) vers ton API. Aucun composant n'a besoin de changer
-tant que la signature des fonctions reste identique.
-
-Priorités suggérées pour un vrai lancement :
-1. Authentification réelle (JWT ou session) + hash des mots de passe.
-2. Vrai fournisseur de taux de change (API bancaire/Wise/Xe...).
-3. Stockage persistant (PostgreSQL/MongoDB) pour utilisateurs, bénéficiaires,
-   transactions.
-4. Conformité réglementaire (KYC, AML) avant tout transfert réel d'argent —
-   obligatoire légalement pour ce type de plateforme.
-5. Paiement/règlement réel avec un partenaire agréé (Wise, Stripe Treasury,
-   partenaire local de mobile money, etc.).
-
-## Pages pas encore construites
-
-- Mot de passe oublié (page dédiée)
-- Tarifs, FAQ, À propos, Contact (contenu statique, faciles à ajouter)
-- Vue mobile dédiée (le responsive CSS couvre une bonne partie, mais pas
-  d'app mobile native)
-- Rapports et support côté admin
-
-## Prochaine étape : GitHub & déploiement
-
-Ce projet ne peut pas être poussé automatiquement sur ton GitHub depuis
-cette conversation (aucun connecteur GitHub disponible ici). Pour continuer :
-
-1. Initialise un repo : `git init && git add . && git commit -m "feat: scaffold SendMoney"`.
-2. Pousse-le sur GitHub, puis relie-le à un nouveau projet Vercel (ou à
-   `smarthr-roster` si tu veux le remplacer — à confirmer, ce sont deux
-   projets différents).
-3. Ou utilise **Claude Code** en local, qui a un accès réel en lecture/écriture
-   à ton repo, pour poursuivre le développement et pousser directement.
+1. **Déployer l'API** (Render, Railway, Fly.io, ou une fonction serverless
+   Vercel) — elle doit tourner en continu, contrairement au frontend statique.
+2. **Changer de mot de passe** pour le compte super admin dès la première
+   connexion (route à construire : `PATCH /api/auth/password`).
+3. **Déployer sur Vercel le `CORS_ORIGIN`** réel une fois le frontend en ligne
+   (actuellement limité à `localhost:5173`).
+4. Rebrancher le service de paiement (`sendmoney-payments`, livré
+   séparément) pour qu'il écrive directement dans cette même base `sendmoney`
+   au lieu de son stockage en mémoire — remplacer son `paymentRepository.js`
+   par des requêtes vers `transactions` ici.
