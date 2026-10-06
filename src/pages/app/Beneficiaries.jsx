@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import * as api from "../../api/mockApi";
-import { COUNTRIES } from "../../api/mockApi";
+import * as api from "../../api/realApi";
+import { COUNTRIES } from "../../api/realApi";
 
 export default function Beneficiaries() {
   const [list, setList] = useState([]);
@@ -53,6 +53,7 @@ export default function Beneficiaries() {
         </form>
       )}
 
+      <div className="table-wrapper">
       <table>
         <thead><tr><th>Nom</th><th>Pays</th><th>Téléphone</th><th>Mode</th><th /></tr></thead>
         <tbody>
@@ -70,6 +71,7 @@ export default function Beneficiaries() {
           })}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

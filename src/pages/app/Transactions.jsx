@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import * as api from "../../api/mockApi";
-import { COUNTRIES } from "../../api/mockApi";
+import * as api from "../../api/realApi";
+import { COUNTRIES } from "../../api/realApi";
 
 function countryLabel(code) {
   const c = COUNTRIES.find((c) => c.code === code);
@@ -32,6 +32,7 @@ export default function Transactions() {
         style={{ marginBottom: 16, maxWidth: 320 }}
       />
 
+      <div className="table-wrapper">
       <table>
         <thead>
           <tr><th>Date</th><th>Envoi → Réception</th><th>Montant envoyé</th><th>Montant reçu</th><th>Statut</th></tr>
@@ -51,6 +52,7 @@ export default function Transactions() {
           )}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

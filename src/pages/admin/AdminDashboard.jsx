@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import * as api from "../../api/mockApi";
+import * as api from "../../api/realApi";
 
 export default function AdminDashboard() {
   const [users, setUsers] = useState([]);

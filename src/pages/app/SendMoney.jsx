@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { COUNTRIES, getExchangeRate, createTransfer } from "../../api/mockApi";
+import { COUNTRIES, getExchangeRate, createTransfer } from "../../api/realApi";
 import CountryPicker from "../../components/ui/CountryPicker";
 
 const STEP_LABELS = ["Pays d'envoi", "Pays de réception", "Bénéficiaire", "Récapitulatif"];

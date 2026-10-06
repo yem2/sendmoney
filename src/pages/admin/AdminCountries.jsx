@@ -1,5 +1,5 @@
 import React from "react";
-import { COUNTRIES } from "../../api/mockApi";
+import { COUNTRIES } from "../../api/realApi";
 
 export default function AdminCountries() {
   return (
@@ -9,6 +9,7 @@ export default function AdminCountries() {
         <button className="btn btn-primary">+ Ajouter un pays</button>
       </div>
 
+      <div className="table-wrapper">
       <table>
         <thead><tr><th>Pays</th><th>Devise</th><th>Statut</th><th /></tr></thead>
         <tbody>
@@ -22,6 +23,7 @@ export default function AdminCountries() {
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

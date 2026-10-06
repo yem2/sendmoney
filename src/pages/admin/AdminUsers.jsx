@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import * as api from "../../api/mockApi";
+import * as api from "../../api/realApi";
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
@@ -29,6 +29,7 @@ export default function AdminUsers() {
         style={{ marginBottom: 16, maxWidth: 320 }}
       />
 
+      <div className="table-wrapper">
       <table>
         <thead><tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Statut</th><th /></tr></thead>
         <tbody>
@@ -43,6 +44,7 @@ export default function AdminUsers() {
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

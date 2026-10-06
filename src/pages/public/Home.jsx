@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { COUNTRIES, POPULAR_COUNTRIES } from "../../api/mockApi";
+import { COUNTRIES, POPULAR_COUNTRIES } from "../../api/realApi";
 
 export default function Home() {
   return (

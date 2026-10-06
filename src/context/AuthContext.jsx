@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import * as api from "../api/mockApi";
+import * as api from "../api/realApi";
 
 const AuthContext = createContext(null);
 
@@ -32,7 +32,11 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, isAdmin: user?.role === "admin" }}>
+    <AuthContext.Provider value={{
+      user, loading, login, register, logout,
+      isAdmin: user?.role === "admin" || user?.role === "super_admin",
+      isSuperAdmin: user?.role === "super_admin",
+    }}>
       {children}
     </AuthContext.Provider>
   );

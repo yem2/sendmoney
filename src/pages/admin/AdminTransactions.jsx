@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import * as api from "../../api/mockApi";
+import * as api from "../../api/realApi";
 
 export default function AdminTransactions() {
   const [transactions, setTransactions] = useState([]);
@@ -11,6 +11,7 @@ export default function AdminTransactions() {
   return (
     <div className="page">
       <h1>Transactions (toutes plateformes)</h1>
+      <div className="table-wrapper">
       <table>
         <thead><tr><th>Date</th><th>Trajet</th><th>Envoyé</th><th>Reçu</th><th>Statut</th></tr></thead>
         <tbody>
@@ -25,6 +26,7 @@ export default function AdminTransactions() {
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

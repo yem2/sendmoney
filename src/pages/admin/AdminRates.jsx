@@ -21,6 +21,7 @@ export default function AdminRates() {
         taux en temps réel (ex. API bancaire) plutôt qu'une saisie manuelle.
       </p>
 
+      <div className="table-wrapper">
       <table>
         <thead><tr><th>Paire de devises</th><th>Taux</th><th /></tr></thead>
         <tbody>
@@ -33,6 +34,7 @@ export default function AdminRates() {
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

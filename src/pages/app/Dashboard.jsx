@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import * as api from "../../api/mockApi";
+import * as api from "../../api/realApi";
 import { useAuth } from "../../context/AuthContext";
 
 export default function Dashboard() {
@@ -34,6 +34,7 @@ export default function Dashboard() {
       </div>
 
       <h3>Dernières transactions</h3>
+      <div className="table-wrapper">
       <table>
         <thead><tr><th>Trajet</th><th>Envoyé</th><th>Reçu</th><th>Statut</th></tr></thead>
         <tbody>
@@ -47,6 +48,7 @@ export default function Dashboard() {
           ))}
         </tbody>
       </table>
+      </div>
       <Link to="/app/transactions" className="link-button">Voir tout →</Link>
     </div>
   );
